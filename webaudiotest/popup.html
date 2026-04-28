@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            width: 200px;
+            padding: 15px;
+            font-family: sans-serif;
+            background: #222;
+            color: white;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            cursor: pointer;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button.active {
+            background: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slider-label"><span>Volume Boost</span><span id="boostVal">1x</span></div>
+    <input type="range" id="boostSlider" min="1" max="5" step="0.1" value="1">
+
+    <button id="monoBtn">Mono Mode: OFF</button>
+    <script src="popup.js"></script>
+</body>
+
+</html>

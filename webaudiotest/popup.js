@@ -1,0 +1,66 @@
+document.getElementById('boostSlider').addEventListener('input', (e) => {
+    const val = e.target.value;
+    document.getElementById('boostVal').innerText = val + 'x';
+    runAudioWork(val, 'boost');
+});
+
+document.getElementById('monoBtn').addEventListener('click', (e) => {
+    const isActive = e.target.classList.toggle('active');
+    e.target.innerText = `Mono Mode: ${isActive ? 'ON' : 'OFF'}`;
+    runAudioWork(isActive, 'mono');
+});
+
+function runAudioWork(value, type) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            func: (val, t) => {
+                if (!window.myAudioCtx) {
+                    const video = document.querySelector('video');
+                    if (!video) return;
+
+                    window.myAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    window.source = window.myAudioCtx.createMediaElementSource(video);
+
+                    // 1. Create Nodes
+                    window.gainNode = window.myAudioCtx.createGain();
+
+                    // We create a splitter and a merger to manipulate individual channels
+                    window.splitter = window.myAudioCtx.createChannelSplitter(2);
+                    window.merger = window.myAudioCtx.createChannelMerger(2);
+
+                    // 2. Build the default Stereo path
+                    window.source.connect(window.gainNode);
+
+                    // Default connection: Gain -> Splitter -> Merger (L to L, R to R) -> Destination
+                    window.gainNode.connect(window.splitter);
+                    window.splitter.connect(window.merger, 0, 0); // Left to Left
+                    window.splitter.connect(window.merger, 1, 1); // Right to Right
+                    window.merger.connect(window.myAudioCtx.destination);
+                }
+
+                if (window.myAudioCtx.state === 'suspended') window.myAudioCtx.resume();
+
+                if (t === 'boost') window.gainNode.gain.value = val;
+
+                if (t === 'mono') {
+                    // Disconnect the merger to rewire it
+                    window.splitter.disconnect();
+
+                    if (val === true) {
+                        // MONO MODE: Connect the Left channel of the splitter to BOTH inputs of the merger
+                        window.splitter.connect(window.merger, 0, 0); 
+                        window.splitter.connect(window.merger, 0, 1); 
+                        window.splitter.connect(window.merger, 1, 0); 
+                        window.splitter.connect(window.merger, 1, 1); 
+                    } else {
+                        // STEREO MODE: Back to normal
+                        window.splitter.connect(window.merger, 0, 0);
+                        window.splitter.connect(window.merger, 1, 1);
+                    }
+                }
+            },
+            args: [value, type]
+        });
+    });
+}
