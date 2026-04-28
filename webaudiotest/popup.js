@@ -29,6 +29,9 @@ function runAudioWork(value, type) {
                     window.splitter = window.myAudioCtx.createChannelSplitter(2);
                     window.merger = window.myAudioCtx.createChannelMerger(2);
 
+                    // we could technically avoid creating this second gain node, i guess,
+                    // but too much trouble to deal with that for now
+                    window.gainNode2 = window.myAudioCtx.createGain();
                     // 2. Build the default Stereo path
                     window.source.connect(window.gainNode);
 
@@ -36,7 +39,8 @@ function runAudioWork(value, type) {
                     window.gainNode.connect(window.splitter);
                     window.splitter.connect(window.merger, 0, 0); // Left to Left
                     window.splitter.connect(window.merger, 1, 1); // Right to Right
-                    window.merger.connect(window.myAudioCtx.destination);
+                    window.merger.connect(window.gainNode2);
+                    window.gainNode2.connect(window.myAudioCtx.destination);
                 }
 
                 if (window.myAudioCtx.state === 'suspended') window.myAudioCtx.resume();
@@ -48,13 +52,14 @@ function runAudioWork(value, type) {
                     window.splitter.disconnect();
 
                     if (val === true) {
-                        // MONO MODE: Connect the Left channel of the splitter to BOTH inputs of the merger
-                        window.splitter.connect(window.merger, 0, 0); 
-                        window.splitter.connect(window.merger, 0, 1); 
-                        window.splitter.connect(window.merger, 1, 0); 
-                        window.splitter.connect(window.merger, 1, 1); 
+                        window.gainNode2.gain.value = 0.5;
+                        window.splitter.connect(window.merger, 0, 0);
+                        window.splitter.connect(window.merger, 0, 1);
+                        window.splitter.connect(window.merger, 1, 0);
+                        window.splitter.connect(window.merger, 1, 1);
                     } else {
                         // STEREO MODE: Back to normal
+                        window.gainNode2.gain.value = 1.0;
                         window.splitter.connect(window.merger, 0, 0);
                         window.splitter.connect(window.merger, 1, 1);
                     }
