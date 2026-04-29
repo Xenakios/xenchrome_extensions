@@ -16,11 +16,11 @@ function runAudioWork(value, type) {
             target: { tabId: tabs[0].id },
             func: (val, t) => {
                 if (!window.myAudioCtx) {
-                    const video = document.querySelector('video');
-                    if (!video) return;
+                    const media = document.querySelector('video, audio');
+                    if (!media) return;
 
                     window.myAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    window.source = window.myAudioCtx.createMediaElementSource(video);
+                    window.source = window.myAudioCtx.createMediaElementSource(media);
 
                     // 1. Create Nodes
                     window.gainNode = window.myAudioCtx.createGain();
